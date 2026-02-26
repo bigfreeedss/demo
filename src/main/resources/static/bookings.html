@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bookings</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <h1>Facility Bookings</h1>
+
+    <button onclick="goToFacilities()">Back to Facilities</button>
+
+    <section>
+        <h2>Create Booking</h2>
+
+        <label>Facility:</label>
+        <select id="facilitySelect"></select><br><br>
+
+        <label>Date:</label>
+        <input type="date" id="date"><br><br>
+
+        <label>Start Time:</label>
+        <input type="time" id="startTime"><br><br>
+
+        <label>End Time:</label>
+        <input type="time" id="endTime"><br><br>
+
+        <button onclick="createBooking()">Create Booking</button>
+    </section>
+
+    <section>
+        <h2>Booking History</h2>
+
+        <table border="1" width="100%">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Facility</th>
+                    <th>Date</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="bookingTableBody"></tbody>
+        </table>
+    </section>
+
+    <script>
+        const API_BASE = "http://localhost:8080";
+
+        window.onload = function() {
+            loadFacilities();
+            loadBookings();
+        };
+
+        function loadFacilities() {
+            fetch(`${API_BASE}/facilities`)
+                .then(res => res.json())
+                .then(data => {
+                    const select = document.getElementById("facilitySelect");
+                    select.innerHTML = "";
+
+                    data.forEach(facility => {
+                        const option = new Option(facility.name, facility.id);
+                        select.add(option);
+                    });
+                });
+        }
+
+        function loadBookings() {
+            fetch(`${API_BASE}/bookings`)
+                .then(res => res.json())
+                .then(data => {
+                    const tableBody = document.getElementById("bookingTableBody");
+                    tableBody.innerHTML = "";
+
+                    data.forEach(booking => {
+
+                        let statusColor = "black";
+                        if (booking.status === "APPROVED") statusColor = "green";
+                        if (booking.status === "CANCELLED") statusColor = "red";
+                        if (booking.status === "PENDING") statusColor = "orange";
+
+                        const row = `
+                            <tr>
+                                <td>${booking.id}</td>
+                                <td>${booking.facility.name}</td>
+                                <td>${booking.date}</td>
+                                <td>${booking.startTime}</td>
+                                <td>${booking.endTime}</td>
+                                <td style="color:${statusColor}">
+                                    ${booking.status}
+                                </td>
+                                <td>
+                                    <button onclick="cancelBooking(${booking.id})">
+                                        Cancel
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                });
+        }
+
+        function createBooking() {
+            const facilityId = document.getElementById("facilitySelect").value;
+            const date = document.getElementById("date").value;
+            const startTime = document.getElementById("startTime").value;
+            const endTime = document.getElementById("endTime").value;
+
+            fetch(`${API_BASE}/bookings`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    facilityId: facilityId,
+                    userId: 1,
+                    date: date,
+                    startTime: startTime,
+                    endTime: endTime
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert("Booking created successfully!");
+                loadBookings();
+            })
+            .catch(error => console.error("Error creating booking:", error));
+        }
+
+        function cancelBooking(id) {
+            fetch(`${API_BASE}/bookings/${id}`, {
+                method: "DELETE"
+            })
+            .then(() => {
+                alert("Booking cancelled");
+                loadBookings();
+            })
+            .catch(error => console.error("Error cancelling booking:", error));
+        }
+
+        function goToFacilities() {
+            window.location.href = "facilities.html";
+        }
+    </script>
+
+</body>
+</html>

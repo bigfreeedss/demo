@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Facilities</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <h1>Available Facilities</h1>
+
+    <button onclick="goToBookings()">Go to Bookings</button>
+
+    <section>
+        <h2>Facility List</h2>
+        <table border="1" width="100%">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Location</th>
+                    <th>Capacity</th>
+                </tr>
+            </thead>
+            <tbody id="facilityTableBody"></tbody>
+        </table>
+    </section>
+
+    <script>
+        const API_BASE = "http://localhost:8080";
+
+        window.onload = function() {
+            loadFacilities();
+        };
+
+        function loadFacilities() {
+            fetch(`${API_BASE}/facilities`)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById("facilityTableBody");
+                    tableBody.innerHTML = "";
+
+                    data.forEach(facility => {
+                        const row = `
+                            <tr>
+                                <td>${facility.name}</td>
+                                <td>${facility.location}</td>
+                                <td>${facility.capacity}</td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                })
+                .catch(error => console.error("Error loading facilities:", error));
+        }
+
+        function goToBookings() {
+            window.location.href = "bookings.html";
+        }
+    </script>
+
+</body>
+</html>
