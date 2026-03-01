@@ -1,27 +1,27 @@
-# Build stage
+# -------- Build Stage --------
 FROM maven:3.9.3-eclipse-temurin-20 AS build
 
 WORKDIR /app
 
-# Copy project files
 COPY pom.xml .
 COPY src ./src
 
-# Build the jar, skip tests
+# Build jar and skip tests
 RUN mvn clean package -DskipTests
 
-# Runtime stage
+# -------- Runtime Stage --------
 FROM eclipse-temurin:20-jdk-jammy
 
 WORKDIR /app
 
-# Copy the built jar
-COPY --from=build /app/target/demo-0.0.1-SNAPSHOT.jar app.jar
+# Copy built jar from build stage
+COPY --from=build /app/target/*.jar app.jar
 
+# Render provides PORT environment variable
 EXPOSE 8080
 
+# Production profile
 ENV SPRING_PROFILES_ACTIVE=prod
-ENV JAVA_TOOL_OPTIONS="-Djava.security.egd=file:/dev/./urandom"
 
-# Do not auto-run
-# ENTRYPOINT ["java","-jar","app.jar"]
+# Start application
+CMD ["java", "-jar", "app.jar"]
